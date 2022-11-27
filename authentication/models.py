@@ -17,7 +17,7 @@ class User(AbstractBaseUser, PermissionsMixin):
   first_name = models.CharField(verbose_name='Имя', max_length=255)
   last_name = models.CharField(verbose_name='Фамилия', max_length=255)
   photo = models.ImageField(verbose_name='Фото', upload_to='users/photo')
-  bio = models.TextField(verbose_name='О себе')
+  bio = models.TextField(verbose_name='О себе', blank=True, null=True)
 
   is_active = models.BooleanField(verbose_name='Активирован', default=False)
   is_staff = models.BooleanField(verbose_name='Сотрудник', default=False)
