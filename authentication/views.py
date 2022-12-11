@@ -20,7 +20,15 @@ class UserViewSet(ModelViewSet):
     serializer.is_valid(raise_exception=True)
     serializer.save()
 
-    return Response({'message': 'success'})
+    user = User.objects.get(email=serializer.data['email'])
+
+    refresh = RefreshToken.for_user(user)
+    response = Response()
+
+    response.set_cookie('refresh', str(refresh))
+    response.data = {'access': str(refresh.access_token)}
+
+    return response
 
   @action(methods=['POST'], detail=False, url_path='login')
   def login(self, request):

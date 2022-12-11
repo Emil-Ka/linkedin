@@ -2,8 +2,8 @@ from django.db import models
 from authentication.models import User
 
 class Resume(models.Model):
-  user = models.ForeignKey(User, on_delete=models.CASCADE)
-  title = models.CharField(max_length=255, verbose_name='Заголовок резюме', default='Резюме')
+  user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+  title = models.CharField(max_length=255, verbose_name='Заголовок резюме')
   text = models.TextField(verbose_name='Описание резюме')
   salary = models.FloatField(verbose_name='Зарплата', blank=True, null=True)
 
@@ -15,7 +15,7 @@ class Resume(models.Model):
     verbose_name_plural = 'Резюме'
 
 class Vacancy(models.Model):
-  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
   title = models.CharField(max_length=255, verbose_name='Заголовок вакансии')
   salary = models.FloatField(verbose_name='Зарплата', blank=True, null=True)
   company_name = models.CharField(max_length=255, verbose_name='Название компании')

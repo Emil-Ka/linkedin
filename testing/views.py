@@ -10,9 +10,28 @@ class QuestionViewSet(ModelViewSet):
   queryset = Question.objects.all()
   serializer_class = QuestionSerializer
 
+  def get_queryset(self):
+    queryset = Question.objects.all()
+    test = self.request.query_params.get('test')
+
+    if test is not None:
+      queryset = queryset.filter(test=test)
+
+    return queryset
+
+
 class OptionViewSet(ModelViewSet):
   queryset = Option.objects.all()
   serializer_class = OptionSerializer
+
+  def get_queryset(self):
+    queryset = Option.objects.all()
+    question = self.request.query_params.get('question')
+
+    if question is not None:
+      queryset = queryset.filter(question=question)
+
+    return queryset
 
 class AnswerViewSet(ModelViewSet):
   queryset = Answer.objects.all()
