@@ -25,8 +25,10 @@ class UserViewSet(ModelViewSet):
     refresh = RefreshToken.for_user(user)
     response = Response()
 
+    data = self.serializer_class(user).data
+
     response.set_cookie('refresh', str(refresh))
-    response.data = {'access': str(refresh.access_token)}
+    response.data = {'access': str(refresh.access_token), 'data': data}
 
     return response
 
@@ -51,8 +53,10 @@ class UserViewSet(ModelViewSet):
     refresh = RefreshToken.for_user(user)
     response = Response()
 
+    data = self.serializer_class(user).data
+
     response.set_cookie('refresh', str(refresh))
-    response.data = {'access': str(refresh.access_token)}
+    response.data = {'access': str(refresh.access_token), 'data': data}
 
     return response
 
