@@ -4,6 +4,8 @@ from authentication.models import User
 class Test(models.Model):
   name = models.CharField(verbose_name='Название теста', max_length=255)
   cover = models.ImageField(verbose_name='Обложка', upload_to='covers')
+  time = models.IntegerField(verbose_name='Время на выполнение')
+  desc = models.TextField(verbose_name='Описание теста')
 
   def __str__(self):
     return self.name
@@ -52,7 +54,7 @@ class Answer(models.Model):
 
 class PassedTest(models.Model):
   user = models.ForeignKey(User, on_delete=models.CASCADE)
-  test = models.ForeignKey(Test, on_delete=models.CASCADE)
+  test = models.ForeignKey(Test, related_name='tests', on_delete=models.CASCADE)
   result = models.FloatField(verbose_name='результат')
 
   def __str__(self):
@@ -61,3 +63,16 @@ class PassedTest(models.Model):
   class Meta:
     verbose_name = 'Результат'
     verbose_name_plural = 'Результаты'
+
+class Results(models.Model):
+  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  test = models.ForeignKey(Test, on_delete=models.CASCADE)
+  question = models.ForeignKey(Question, on_delete=models.CASCADE)
+  option = models.ForeignKey(Option, on_delete=models.CASCADE)
+
+  def __str__(self):
+    return 'the option_id' + self.option + 'chosen by' + self.user.email
+
+  class Meta:
+    verbose_name = 'Выбранный вариант ответа'
+    verbose_name_plural = 'Выбранные варианты ответа'

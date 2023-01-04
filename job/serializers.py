@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from job.models import Vacancy, Response, Response
+from job.models import Vacancy, Response, Resume
 
 class VacancySerializer(serializers.ModelSerializer):
   class Meta:
@@ -14,7 +14,7 @@ class VacancySerializer(serializers.ModelSerializer):
 
 class ResumeSerializer(serializers.ModelSerializer):
   class Meta:
-    model = Response
+    model = Resume
     fields = '__all__'
 
 class ResponseSerializer(serializers.ModelSerializer):

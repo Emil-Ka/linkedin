@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action, permission_classes
 
 class VacancyViewSet(ModelViewSet):
-  queryset = Vacancy.objects.all()
+  queryset = Vacancy.objects.all().order_by('id').reverse()
   serializer_class = VacancySerializer
   pagination_class = Pagination
 
@@ -61,12 +61,9 @@ class VacancyViewSet(ModelViewSet):
 
     return DjangoResponse(data)
 
-
-
 class ResumeViewSet(ModelViewSet):
   queryset = Resume.objects.all()
   serializer_class = ResumeSerializer
-  pagination_class = Pagination
 
   def get_queryset(self):
     email = self.request.user
@@ -148,7 +145,6 @@ class ResponseViewSet(ModelViewSet):
       raise AuthenticationFailed({'error': 'you are not the creator of this vacancy'})
 
     queryset = self.queryset.filter(vacancy=vacancy_id)
-    print(queryset)
 
     return DjangoResponse({'responses': list(queryset.values())})
 

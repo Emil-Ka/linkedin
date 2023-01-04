@@ -1,6 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
-from testing.serializers import TestSerializer, QuestionSerializer, OptionSerializer, AnswerSerializer, PassedTestSerializer
-from testing.models import Test, Question, Option, Answer, PassedTest
+from testing.serializers import TestSerializer, QuestionSerializer, OptionSerializer, AnswerSerializer, PassedTestSerializer, ResultsSerializer
+from testing.models import Test, Question, Option, Answer, PassedTest, Results
 from authentication.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response as DjangoResponse
@@ -183,6 +183,15 @@ class AnswerViewSet(ModelViewSet):
   queryset = Answer.objects.all()
   serializer_class = AnswerSerializer
 
+  def get_queryset(self):
+    queryset = self.queryset
+    test = self.request.query_params.get('test')
+
+    if test is not None:
+      queryset = queryset.filter(test=test)
+
+    return queryset
+
   @action(methods=['POST'], detail=False, url_path='create', permission_classes=[IsAuthenticated & IsAdmin])
   def create_answer(self, request):
     email = request.user
@@ -194,6 +203,73 @@ class AnswerViewSet(ModelViewSet):
     serializer.save()
 
     return DjangoResponse(serializer.data)
+
+  @action(methods=['POST'], detail=False, url_path='check', permission_classes=[IsAuthenticated])
+  def check_answer(self, request):
+    print(request.data)
+    email = request.user
+    user = User.objects.get(email=email)
+    user_id = getattr(user, 'id')
+    score = 0
+    count = len(request.data.keys())
+
+    for key in request.data.keys():
+      question_id = key
+      user_option_id = request.data.get(key)
+
+      try:
+        answer = Answer.objects.get(question=question_id)
+      except Answer.DoesNotExist:
+        raise NotFound({'error': 'answer for this question was not found'})
+
+      option_text = getattr(answer, 'option')
+      option = Option.objects.get(text=option_text)
+      option_id = getattr(option, 'id')
+
+      if (user_option_id == str(option_id)):
+        score += 1
+
+      question = Question.objects.get(id=question_id)
+      test_name = getattr(question, 'test')
+      test = Test.objects.get(name=test_name)
+      test_id = getattr(test, 'id')
+
+      user_option = Option.objects.get(id=user_option_id)
+
+      try:
+        result = Results.objects.get(question=question_id, user=user_id)
+        setattr(result, 'option', user_option)
+        result.save()
+      except Results.DoesNotExist:
+        result_data = {
+          'user': user_id,
+          'option': user_option_id,
+          'question': question_id,
+          'test': test_id
+        }
+
+        resultSerializer = ResultsSerializer(data=result_data)
+        resultSerializer.is_valid(raise_exception=True)
+        resultSerializer.save()
+
+    total = round(score / count * 100)
+
+    try:
+      passed_test = PassedTest.objects.get(user=user_id, test=test_id)
+      setattr(passed_test, 'result', total)
+      passed_test.save()
+    except PassedTest.DoesNotExist:
+      passed_test_data = {
+        'user': user_id,
+        'test': test_id,
+        'result': total
+      }
+      passed_test_serializer = PassedTestSerializer(data=passed_test_data)
+      passed_test_serializer.is_valid(raise_exception=True)
+      passed_test_serializer.save()
+
+    return DjangoResponse({'result': total})
+
 
   @action(methods=['DELETE'], detail=False, url_path=r'delete/(?P<answer_id>.*)', permission_classes=[IsAuthenticated & IsAdmin])
   def delete_answer(self, request, answer_id):
@@ -212,6 +288,8 @@ class AnswerViewSet(ModelViewSet):
   @action(methods=['PATCH'], detail=False, url_path='update', permission_classes=[IsAuthenticated & IsAdmin])
   def update_answer(self, request):
     answer_id = request.data.get('id')
+    question_id = request.data.get('question')
+    option_id = request.data.get('option')
 
     if answer_id is None:
       raise ValidationError({'error': 'answer id not found'})
@@ -221,9 +299,18 @@ class AnswerViewSet(ModelViewSet):
     except Answer.DoesNotExist:
       raise NotFound({'error': 'answer with this id was not found'})
 
-    for key in request.data:
-      if request.data.get(key) is not None:
-        setattr(answer, key, request.data.get(key))
+    try:
+      option = Option.objects.get(id=option_id)
+    except Option.DoesNotExist:
+      raise NotFound({'error': 'option with this id was not found'})
+
+    try:
+      question = Question.objects.get(id=question_id)
+    except Question.DoesNotExist:
+      raise NotFound({'error': 'question with this id was not found'})
+
+    setattr(answer, 'question', question)
+    setattr(answer, 'option', option)
 
     answer.save()
     data = self.serializer_class(answer).data
@@ -233,6 +320,17 @@ class AnswerViewSet(ModelViewSet):
 class PassedTestViewSet(ModelViewSet):
   queryset = PassedTest.objects.all()
   serializer_class = PassedTestSerializer
+
+  def get_queryset(self):
+    email = self.request.user
+    user = User.objects.get(email=email)
+
+    if user is None:
+      raise AuthenticationFailed({'error': 'user is not find'})
+
+    queryset = self.queryset.filter(user=user)
+
+    return queryset
 
   @action(methods=['POST'], detail=False, url_path='create', permission_classes=[IsAuthenticated])
   def create_passed_test(self, request):
@@ -281,8 +379,57 @@ class PassedTestViewSet(ModelViewSet):
 
     return DjangoResponse(data)
 
+class ResultsViewSet(ModelViewSet):
+  queryset = Results.objects.all()
+  serializer_class = ResultsSerializer
 
-#  from rest_framework.response import Response
+  def get_queryset(self):
+    email = self.request.user
+    user = User.objects.get(email=email)
+
+    test_id = self.request.query_params.get('test')
+
+    results = Results.objects.filter(user=getattr(user, 'id'), test=test_id)
+
+    return results
+
+  @action(methods=['PATCH'], detail=False, url_path='update', permission_classes=[IsAuthenticated])
+  def create_results(self, request):
+    email = request.user
+    user = User.objects.get(email=email)
+
+    try:
+      result = Results.objects.get(question=request.data.get('question'), user=getattr(user, 'id'))
+    except Results.DoesNotExist:
+      raise NotFound({'error': 'result was not found'})
+
+    option = Option.objects.get(id=request.data.get('option'))
+    question = Question.objects.get(id=request.data.get('question'))
+
+    setattr(result, 'question', question)
+    setattr(result, 'option', option)
+
+    result.save()
+
+    return DjangoResponse({'message': 'success'})
+
+  @action(methods=['DELETE'], detail=False, url_path=r'delete/(?P<result_id>.*)', permission_classes=[IsAuthenticated & IsAdmin])
+  def delete_result(self, request, result_id):
+    if result_id is None:
+      raise ValidationError({'error': 'result id not found'})
+
+    try:
+      result = Results.objects.get(id=result_id)
+    except PassedTest.DoesNotExist:
+      raise NotFound({'error': 'result with this id was not found'})
+
+    result.delete()
+
+    return DjangoResponse({'message': f'result with id #{result_id} was successfully deleted'})
+
+
+
+# from rest_framework.response import Response
 # from rest_framework.decorators import api_view
 # from django.core import serializers
 # from testing.models import Test

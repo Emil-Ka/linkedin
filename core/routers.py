@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from testing.views import TestViewSet, QuestionViewSet, OptionViewSet, AnswerViewSet, PassedTestViewSet
+from testing.views import TestViewSet, QuestionViewSet, OptionViewSet, AnswerViewSet, PassedTestViewSet, ResultsViewSet
 from job.views import VacancyViewSet, ResumeViewSet, ResponseViewSet
 from authentication.views import UserViewSet
 
@@ -10,6 +10,7 @@ router.register('questions', QuestionViewSet)
 router.register('options', OptionViewSet)
 router.register('answers', AnswerViewSet)
 router.register('passed_tests', PassedTestViewSet)
+router.register('results', ResultsViewSet)
 router.register('vacancies', VacancyViewSet)
 router.register('resumes', ResumeViewSet)
 router.register('responses', ResponseViewSet)
