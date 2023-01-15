@@ -1,4 +1,5 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 from authentication.models import User
 
 class Test(models.Model):
@@ -6,6 +7,8 @@ class Test(models.Model):
   cover = models.ImageField(verbose_name='Обложка', upload_to='covers')
   time = models.IntegerField(verbose_name='Время на выполнение')
   desc = models.TextField(verbose_name='Описание теста')
+
+  history = HistoricalRecords()
 
   def __str__(self):
     return self.name
@@ -20,6 +23,8 @@ class Question(models.Model):
   text = models.TextField(verbose_name='Вопрос')
   photo = models.ImageField(verbose_name='Фото', upload_to='questions', blank=True)
 
+  history = HistoricalRecords()
+
   def __str__(self):
     return self.text
 
@@ -32,6 +37,8 @@ class Option(models.Model):
   question = models.ForeignKey(Question, on_delete=models.CASCADE)
   text = models.TextField(verbose_name='Вариант ответа')
 
+  history = HistoricalRecords()
+
   def __str__(self):
     return self.text
 
@@ -43,6 +50,8 @@ class Option(models.Model):
 class Answer(models.Model):
   question = models.ForeignKey(Question, on_delete=models.CASCADE)
   option = models.ForeignKey(Option, on_delete=models.CASCADE)
+
+  history = HistoricalRecords()
 
   def __str__(self):
     return str(self.id)
@@ -57,6 +66,8 @@ class PassedTest(models.Model):
   test = models.ForeignKey(Test, related_name='tests', on_delete=models.CASCADE)
   result = models.FloatField(verbose_name='результат')
 
+  history = HistoricalRecords()
+
   def __str__(self):
     return self.user.email + ' passed ' + self.test.name
 
@@ -69,6 +80,8 @@ class Results(models.Model):
   test = models.ForeignKey(Test, on_delete=models.CASCADE)
   question = models.ForeignKey(Question, on_delete=models.CASCADE)
   option = models.ForeignKey(Option, on_delete=models.CASCADE)
+
+  history = HistoricalRecords()
 
   def __str__(self):
     return 'the option_id' + self.option + 'chosen by' + self.user.email

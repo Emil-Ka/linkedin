@@ -76,6 +76,7 @@ class QuestionViewSet(ModelViewSet):
   def create_question(self, request):
     email = request.user
     user = User.objects.get(email=email)
+    request.data._mutable = True
     request.data['user'] = user.id
 
     serializer = self.serializer_class(data=request.data)
@@ -223,6 +224,7 @@ class AnswerViewSet(ModelViewSet):
         raise NotFound({'error': 'answer for this question was not found'})
 
       option_text = getattr(answer, 'option')
+      print('option text', option_text)
       option = Option.objects.get(text=option_text)
       option_id = getattr(option, 'id')
 

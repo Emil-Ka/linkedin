@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 from authentication.managers import UserManager
 from authentication.roles import ROLE_CHOICES
-
+from simple_history.models import HistoricalRecords
 
 class User(AbstractBaseUser, PermissionsMixin):
     # verbose_name - как будет отображаться в админке
@@ -28,6 +28,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'role']
+
+    history = HistoricalRecords()
 
     objects = UserManager()
 
