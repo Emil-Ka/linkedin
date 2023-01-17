@@ -47,12 +47,13 @@ INSTALLED_APPS = [
     'django.contrib.admin',
 
     'rest_framework',
-    'corsheaders',
     'simple_history',
 
     'authentication',
     'testing',
-    'job'
+    'job',
+
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
