@@ -207,7 +207,6 @@ class AnswerViewSet(ModelViewSet):
 
   @action(methods=['POST'], detail=False, url_path='check', permission_classes=[IsAuthenticated])
   def check_answer(self, request):
-    print(request.data)
     email = request.user
     user = User.objects.get(email=email)
     user_id = getattr(user, 'id')
@@ -224,8 +223,7 @@ class AnswerViewSet(ModelViewSet):
         raise NotFound({'error': 'answer for this question was not found'})
 
       option_text = getattr(answer, 'option')
-      print('option text', option_text)
-      option = Option.objects.get(text=option_text)
+      option = Option.objects.get(text=option_text, question=question_id)
       option_id = getattr(option, 'id')
 
       if (user_option_id == str(option_id)):
