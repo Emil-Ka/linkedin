@@ -97,7 +97,7 @@ class QuestionViewSet(ModelViewSet):
 
     question.delete()
 
-    return DjangoResponse({'message': f'test with id #{question_id} was successfully deleted'})
+    return DjangoResponse({'message': f'question with id #{question_id} was successfully deleted'})
 
   @action(methods=['PATCH'], detail=False, url_path='update', permission_classes=[IsAuthenticated & IsAdmin])
   def update_question(self, request):
